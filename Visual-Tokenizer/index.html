@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Visual Tokenizer</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            background-color: #050505; /* Fallback color */
+        }
+
+        body::before {
+            content: "";
+            position: fixed; 
+            top: -5%; 
+            left: -5%;
+            width: 110%;
+            height: 110%;
+            background-image: url("https://images.unsplash.com/photo-1635070041078-e363dbe005cb?q=80&w=1920&auto=format&fit=crop");
+            background-size: cover;
+            background-position: center;
+            
+            filter: blur(3px) brightness(0.6); 
+            
+            z-index: -1;
+        }
+
+        .title {
+            color: white;
+            font-family: 'Bahnschrift', sans-serif;
+            font-weight: 300;
+            letter-spacing: 2px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .glass-panel {
+            background: rgba(20, 20, 20, 0.4);
+            backdrop-filter: blur(50px);
+            -webkit-backdrop-filter: blur(50px);
+            padding: 40px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            color: white;
+            font-family: 'Bahnschrift', sans-serif;
+            display: flex;
+            gap: 40px;
+            width: 100%;
+            max-width: 1370px;
+            box-sizing: border-box;
+        }
+        
+        .column { flex: 1; }
+        
+        h3 { 
+            margin-top: 0; 
+            font-weight: 300; 
+            letter-spacing: 1px; 
+            margin-bottom: 10px;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 120px;
+            background-color: black;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: white;
+            font-family: 'Bahnschrift', sans-serif;
+            font-size: 16px;
+            padding: 15px;
+            outline: none;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+            resize: none;
+        }
+        
+        textarea::placeholder { color: rgba(255, 255, 255, 0.5); }
+        
+        textarea:focus {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+        
+        .token-chip {
+            display: inline-block;
+            background-color: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 0 14px; 
+            margin: 5px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 16px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            white-space: pre; 
+            height: 36px; 
+            line-height: 34px; 
+            vertical-align: top; 
+            transition: all 0.2s ease; 
+        }
+
+        .token-chip.highlight {
+            background-color: rgba(105, 240, 174, 0.2);
+            border-color: rgba(105, 240, 174, 0.8);
+            box-shadow: 0 0 10px rgba(105, 240, 174, 0.4);
+            transform: scale(1.05);
+            color: #69f0ae;
+        }
+
+        .bpe-token { cursor: pointer; }
+
+        .sub-number {
+            position: relative;
+            color: #8ce9ff; 
+            cursor: pointer;
+            transition: color 0.1s;
+        }
+
+        .sub-number.sub-highlight, .sub-number:hover {
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        .sub-text {
+            transition: background-color 0.1s, color 0.1s;
+            border-radius: 3px;
+        }
+
+        .sub-text.sub-highlight {
+            background-color: #69f0ae;
+            color: black;
+        }
+
+        .BPE_window {
+            width: 90%;
+            height: 200px; 
+            margin-top: 20px;
+            background: rgba(20, 20, 20, 0.4);
+            backdrop-filter: blur(50px);
+            -webkit-backdrop-filter: blur(50px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: white;
+            font-family: 'Bahnschrift', sans-serif;
+            font-size: 16px;
+            padding: 15px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #output-area {
+            height: 295px; 
+            overflow-y: auto;
+        }
+        
+        input[type=range] {
+            accent-color: rgba(255, 255, 255, 0.8);
+            width: 130px;
+            cursor: pointer;
+        }
+        
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <h1 class="title">Train & Test Tokenizer</h1>
+
+    <div class="glass-panel">
+        <div class="column">
+            <h3>1. Training Text</h3>
+            <textarea id="train-input" placeholder="Paste lots of text here to teach the BPE algorithm..." style="margin-bottom: 20px;"></textarea>
+            
+            <h3>2. Test Input</h3>
+            <textarea id="text-input" placeholder="Start typing... (e.g. Hello, John!)"></textarea>
+        </div>
+        <div class="column">
+            <h3 id="output-title">Tokens Output</h3>
+            <div id="output-area">
+                <p style="color: rgba(255,255,255,0.7);">Your test tokens will appear here.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="BPE_window">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; flex-shrink: 0;">
+            <h3>Byte Pair Encoding Output --</h3>
+            <div style="display: flex; gap: 20px;">
+                <div>
+                    <label style="font-size: 13px; color: rgba(255,255,255,0.8);">Train Merges (Learn): <b id="train-val">0</b></label><br>
+                    <input type="range" id="train-slider" min="0" max="150" value="0">
+                </div>
+                <div>
+                    <label style="font-size: 13px; color: rgba(255,255,255,0.8);">Test Merges (Apply): <b id="test-val">0</b></label><br>
+                    <input type="range" id="test-slider" min="0" max="150" value="0">
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 20px; flex: 1; min-height: 0;">
+            
+            <div style="flex: 2; display: flex; flex-direction: column;">
+                <p style="font-size: 12px; color: #aaa; margin-top:0; margin-bottom: 5px; flex-shrink: 0;">Compressed Test Bytes:</p>
+                <div id="bpeoutput-area" style="overflow-y: auto; flex: 1; padding-right: 5px; padding-top: 5px;"></div>
+            </div>
+            
+            <div style="flex: 1; border-left: 1px solid rgba(255,255,255,0.2); padding-left: 20px; display: flex; flex-direction: column;">
+                <p style="font-size: 12px; color: #aaa; margin-top:0; margin-bottom: 5px; flex-shrink: 0;">Learned Merge Rules:</p>
+                <div id="rules-area" style="overflow-y: auto; flex: 1; font-family: monospace; font-size: 14px; color: #ddd; line-height: 1.8; padding-right: 5px;">
+                    Move Train Slider to learn.
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const trainInput = document.getElementById('train-input');
+        const input = document.getElementById('text-input');
+        const output = document.getElementById('output-area');
+        const output2 = document.getElementById('bpeoutput-area');
+        const rulesArea = document.getElementById('rules-area');
+        const outputTitle = document.getElementById('output-title'); 
+        
+        const trainSlider = document.getElementById('train-slider');
+        const testSlider = document.getElementById('test-slider');
+        const trainVal = document.getElementById('train-val');
+        const testVal = document.getElementById('test-val');
+
+        output2.addEventListener('mouseover', (e) => {
+            if (e.target.classList.contains('sub-number')) {
+                const targetId = e.target.getAttribute('data-sub-target');
+                const subText = document.getElementById(targetId);
+                e.target.classList.add('sub-highlight');
+                if (subText) subText.classList.add('sub-highlight');
+            } 
+            else if (e.target.classList.contains('bpe-token')) {
+                const targetId = e.target.getAttribute('data-target');
+                const textChip = document.getElementById(targetId);
+                e.target.classList.add('highlight');
+                if (textChip) textChip.classList.add('highlight');
+            }
+        });
+
+        output2.addEventListener('mouseout', (e) => {
+            if (e.target.classList.contains('sub-number')) {
+                const targetId = e.target.getAttribute('data-sub-target');
+                const subText = document.getElementById(targetId);
+                e.target.classList.remove('sub-highlight');
+                if (subText) subText.classList.remove('sub-highlight');
+            } 
+            else if (e.target.classList.contains('bpe-token')) {
+                const targetId = e.target.getAttribute('data-target');
+                const textChip = document.getElementById(targetId);
+                e.target.classList.remove('highlight');
+                if (textChip) textChip.classList.remove('highlight');
+            }
+        });
+
+        async function processText() {
+            const trainText = trainInput.value;
+            const text = input.value;
+            const trainMerges = trainSlider.value;
+            const testMerges = testSlider.value;
+            
+            trainVal.innerText = trainMerges;
+            testVal.innerText = testMerges;
+            
+            if (text.trim() === "") {
+                outputTitle.innerHTML = `Tokens Output`; 
+                output.innerHTML = `<p style="color: rgba(255,255,255,0.7);">Your test tokens will appear here.</p>`;
+                output2.innerHTML = ``; 
+                rulesArea.innerHTML = `Move Train Slider to learn.`;
+                return;
+            }
+
+            try {
+                const tokenResponse = await fetch('http://127.0.0.1:5000/tokenize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text })
+                });
+                
+                let originalTokens = [];
+                if (tokenResponse.ok) {
+                    const tokenData = await tokenResponse.json();
+                    originalTokens = tokenData.tokens;
+                    
+                    outputTitle.innerHTML = `Tokens Output (Found <b>${originalTokens.length}</b> tokens)`;
+                    
+                    let html = ``; 
+                    originalTokens.forEach((t, index) => { 
+                        html += `<span class="token-chip" id="text-token-${index}"></span>`; 
+                    });
+                    output.innerHTML = html;
+                }
+
+                const bpeResponse = await fetch('http://127.0.0.1:5000/bpetokenize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        text: text, 
+                        training_text: trainText, 
+                        train_merges: trainMerges,
+                        test_merges: testMerges 
+                    })
+                });
+
+                if (bpeResponse.ok) {
+                    const bpeData = await bpeResponse.json();
+                    const bpeBytes = bpeData.bpe_bytes;
+                    const learnedRules = bpeData.learned_merges;
+
+                    let bpeHtml = ``; 
+                    if (bpeBytes) { 
+                        bpeBytes.forEach((chunkData, index) => {
+                            
+                            let origToken = originalTokens[index];
+                            let textChipInner = ``;
+                            
+                            if (origToken === "'\\n") {
+                                textChipInner = `'<span class="sub-text" id="text-token-${index}-sub-0">\\n</span>`;
+                            } else {
+                                textChipInner += `'`;
+                                chunkData.forEach((item, i) => {
+                                    let safeText = item.text.replace(/\n/g, '\\n').replace(/\r/g, '\\r');
+                                    safeText = safeText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                                    textChipInner += `<span class="sub-text" id="text-token-${index}-sub-${i}">${safeText}</span>`;
+                                });
+                                textChipInner += `'`;
+                            }
+                            
+                            const topChip = document.getElementById(`text-token-${index}`);
+                            if (topChip) {
+                                topChip.innerHTML = textChipInner;
+                            }
+
+                            bpeHtml += `<span class="token-chip bpe-token" data-target="text-token-${index}">[`;
+                            
+                            chunkData.forEach((item, i) => {
+                                bpeHtml += `<span class="sub-number" data-sub-target="text-token-${index}-sub-${i}">${item.id}</span>`;
+                                if (i < chunkData.length - 1) {
+                                    bpeHtml += `, `;
+                                }
+                            });
+                            
+                            bpeHtml += `]</span>`;
+                        });
+                    } 
+                    output2.innerHTML = bpeHtml;
+
+                    if (learnedRules && learnedRules.length > 0) {
+                        let rulesHtml = ``;
+                        learnedRules.forEach((rule, index) => {
+                            if (index < testMerges) {
+                                rulesHtml += `<div style="color: #69f0ae;">${rule}</div>`; 
+                            } else {
+                                rulesHtml += `<div style="color: rgba(255,255,255,0.3);">${rule}</div>`; 
+                            }
+                        });
+                        rulesArea.innerHTML = rulesHtml;
+                    } else {
+                        rulesArea.innerHTML = `Train Slider is at 0. No merges learned.`;
+                    }
+                }
+
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        input.addEventListener('input', processText);
+        trainInput.addEventListener('input', processText);
+        trainSlider.addEventListener('input', processText);
+        testSlider.addEventListener('input', processText);
+    </script>
+</body>
+</html>
