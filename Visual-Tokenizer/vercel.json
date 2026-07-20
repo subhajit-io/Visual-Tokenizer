@@ -2,7 +2,6 @@
   "functions": {
     "api/index.py": { "runtime": "@vercel/python@4.3.0" }
   },
-  {
   "rewrites": [
     { "source": "/api/tokenize", "destination": "/api/index" },
     { "source": "/api/bpetokenize", "destination": "/api/index" },
