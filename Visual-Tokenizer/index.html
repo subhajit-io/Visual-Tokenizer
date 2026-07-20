@@ -286,11 +286,11 @@
             }
 
             try {
-                const tokenResponse = await fetch('http://127.0.0.1:5000/tokenize', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: text })
-                });
+        const tokenResponse = await fetch('/api/tokenize', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: text })
+        });
                 
                 let originalTokens = [];
                 if (tokenResponse.ok) {
@@ -306,7 +306,7 @@
                     output.innerHTML = html;
                 }
 
-                const bpeResponse = await fetch('http://127.0.0.1:5000/bpetokenize', {
+                const bpeResponse = await fetch('/api/bpetokenize', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
