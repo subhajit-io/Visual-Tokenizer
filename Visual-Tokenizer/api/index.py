@@ -40,7 +40,7 @@ def tokenizer(text):
     return result
 
 
-@app.route("/tokenize", methods=["POST"])
+@app.route("/api/tokenize", methods=["POST"])
 def api_tokenize():
     try:
         data = request.json
@@ -53,7 +53,7 @@ def api_tokenize():
         return jsonify({"error": str(e)}), 500
     
 
-@app.route("/bpetokenize", methods=["POST"])
+@app.route("/api/bpetokenize", methods=["POST"])
 def api_bpetokenize():
     try:
         data = request.json
@@ -91,7 +91,7 @@ def api_bpetokenize():
         for pair, label in special_rules:
             merges[pair] = current_id
             vocab[current_id] = vocab[pair[0]] + vocab[pair[1]]
-            merge_history.append(f"{list(pair)} ➔ {current_id} [{label}]")
+            merge_history.append(f"{list(pair)} \u2794 {current_id} [{label}]")
 
             for j in range(len(train_bytes)):
                 train_bytes[j] = merge_ids(train_bytes[j], pair, current_id)
@@ -112,7 +112,7 @@ def api_bpetokenize():
             merges[best_pair] = idx 
             
             vocab[idx] = vocab[best_pair[0]] + vocab[best_pair[1]]
-            merge_history.append(f"{list(best_pair)} ➔ {idx}")
+            merge_history.append(f"{list(best_pair)} \u2794 {idx}")
             
             for j in range(len(train_bytes)):
                 train_bytes[j] = merge_ids(train_bytes[j], best_pair, idx)
@@ -159,7 +159,7 @@ def api_bpetokenize():
         return jsonify({"error": str(e)}), 500
 
 
-@app.route("/health", methods=["GET"])
+@app.route("/api/health", methods=["GET"])
 def health_check():
     return jsonify({"status": "Backend is running"}), 200
 
