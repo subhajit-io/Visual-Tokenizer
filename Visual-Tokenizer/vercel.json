@@ -1,6 +1,7 @@
 {
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index.py" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/api/tokenize", "destination": "/api/index.py" },
+    { "source": "/api/bpetokenize", "destination": "/api/index.py" },
+    { "source": "/", "destination": "/index.html" }
   ]
 }
