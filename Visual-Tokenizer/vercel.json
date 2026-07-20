@@ -1,4 +1,7 @@
 {
+  "functions": {
+    "api/index.py": { "runtime": "@vercel/python" }
+  },
   "rewrites": [
     { "source": "/api/tokenize", "destination": "/api/index.py" },
     { "source": "/api/bpetokenize", "destination": "/api/index.py" },
